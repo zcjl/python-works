@@ -1,9 +1,14 @@
+# coding:utf-8
+
 from PIL import Image
 import time
 import os
 import shutil
-import sys
 import getopt
+import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 def get_datetime(exifinfo):
@@ -27,12 +32,16 @@ def get_datetime(exifinfo):
 
 def get_maker(exifinfo):
     if 271 in exifinfo:  # 271:Make
-        maker = exifinfo[271].replace(' ', '_')
+        maker = trim(exifinfo[271])
 
     if 272 in exifinfo:  # 272:Model
-        model = exifinfo[272].replace(' ', '_')
+        model = trim(exifinfo[272])
 
     return maker, model
+
+
+def trim(a):
+    return re.sub("[^a-zA-Z0-9_]", "", a.strip().replace(' ', '_').replace('/', '_').replace(',', '_'))
 
 
 def get_exif_data(fname):
@@ -86,9 +95,10 @@ def copy_photos(todo):
             oldpath = exifdata['oldpath']
             if index > 0:
                 timestamp = timestamp + "_" + str(index)
-            newpath = '%s/%s/%s/%s/IMG_%s%s' % (DEST, maker, model, date, timestamp, get_file_ext(oldpath))
-            log.append('cp "%s" "%s"' % (oldpath, newpath))
-            do_copy(oldpath, newpath)
+            newpath = '%s/%s/%s_%s_IMG_%s%s' % (DEST, date, maker, model, timestamp, get_file_ext(oldpath))
+            log.append('"%s" "%s"' % (oldpath, newpath))
+            # do_copy(oldpath, newpath)
+            # print(oldpath, newpath)
     return log
 
 
@@ -110,9 +120,10 @@ def do_copy(srcfile, dstfile):
 
 
 def write_log_file(succ, fail, log):
-    succ_file = open(SRC + 'succ.txt', 'w')
-    fail_file = open(SRC + 'fail.txt', 'w')
-    log_file = open(SRC + 'log.txt', 'w')
+    print(succ, fail, log)
+    succ_file = open('succ.txt', 'w')
+    fail_file = open('fail.txt', 'w')
+    log_file = open('todo_list.txt', 'w')
 
     succ_file.write('\n'.join(succ))
     fail_file.write('\n'.join(fail))
@@ -128,7 +139,7 @@ def main():
 def init(argv):
     global SRC, DEST
 
-    SRC = '/volume1/photo/iPhone8p/'
+    SRC = '/volume1/photo/iPhone8p'
     DEST = '/volume1/photo/new_ip8p'
 
     try:
@@ -147,6 +158,8 @@ def init(argv):
             SRC = arg
         elif opt in ("-d", "--dest"):
             DEST = arg
+
+    print(SRC, DEST)
 
 
 if __name__ == "__main__":
