@@ -96,7 +96,7 @@ def copy_photos(todo):
             if index > 0:
                 timestamp = timestamp + "_" + str(index)
             newpath = '%s/%s/%s_%s_IMG_%s%s' % (DEST, date, maker, model, timestamp, get_file_ext(oldpath))
-            log.append('"%s" "%s"' % (oldpath, newpath))
+            log.append('%s %s' % (oldpath, newpath))
             # do_copy(oldpath, newpath)
             # print(oldpath, newpath)
     return log

@@ -48,7 +48,7 @@ mkdir ../Photos
 mkdir ../Videos
 
 echo "move all picture format files"
-find . -type f | grep -i "\.jpg\|\.png\|\.gif\|\.jpeg\|\.nef\|\.psd" |
+find . -type f | grep -i "\.jpg\|\.png\|\.gif\|\.jpeg\|\.nef\|\.psd\|.bmp" |
 while read name
 do
     na="../Pictures_without_exif/"$(echo $name | sed "s/\/[^\/]*\..*$//")
@@ -77,10 +77,14 @@ do
     mv "$old" "$new"
 done
 
-echo "log new  file list and count"
-find ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f | sort > ./new_file_list.txt
-find ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f | sed 's/^.*\.//' | sort | uniq -c | sort -n > ./new_file_ext_statistic.txt
-
 echo "cleanup empty directories and files"
-find . -type f -empty -delete
-find . -type d -empty | xargs rm -rf
+find ./ ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f -empty -delete
+find ./ ../Pictures_without_exif/ ../Photos/ ../Videos/ -type d -empty | xargs rm -rf
+
+echo "log new  file list and count"
+find ./ ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f | sort > ./new_file_list.txt
+find ./ ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f | sed 's/^.*\.//' | sort | uniq -c | sort -n > ./new_file_ext_statistic.txt
+
+echo "find duplicated files by filesize and md5sum"
+find ./ ../Pictures_without_exif/ ../Photos/ ../Videos/ -type f -printf '%s\n' | sort -n | uniq -c | sort -n | grep -v '1 ' | awk '{print $2}' | xargs -I {} find . -type f -size {}c | xargs -I {} md5sum "{}" > dup_md5.txt
+cat dup_md5.txt |awk '{print $1}' | sort | uniq -c | sort -n | grep -v '1 '| awk '{print $2}' | xargs -I {} grep {} dup_md5.txt | sort -k1 > dup_files.txt
